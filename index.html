@@ -1,99 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>DEAD HAND 3D - AUTO TELEPORT</title>
+    <title>DEAD HAND - MODE HOTSPOT</title>
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
-        #lobby { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; background: #000; }
-        .box-kode { border: 2px solid #8ab4f8; padding: 15px; margin: 15px; border-radius: 10px; }
-        .btn { padding: 15px 30px; border-radius: 25px; border: none; font-weight: bold; cursor: pointer; margin: 10px; }
-        input { padding: 15px; border-radius: 20px; text-align: center; border: none; background: #222; color: #fff; }
+        body { margin: 0; background: #000; color: #fff; text-align: center; font-family: sans-serif; }
+        .btn { padding: 20px; background: red; color: white; border: none; border-radius: 10px; margin: 20px; font-weight: bold; }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
     <div id="lobby">
-        <h1 style="color:red;">DEAD HAND 3D</h1>
-        <div class="box-kode">
-            <p style="font-size:12px;">KODE ROOM KAMU:</p>
-            <h2 id="display-kode">MENUNGGU...</h2>
-        </div>
-        <button class="btn" style="background:#8ab4f8;" onclick="buatRuangan()">1. BUAT ROOM</button>
-        <hr style="width:50%; border:0.1px solid #333;">
-        <input type="text" id="room-code" placeholder="TEMPEL KODE TEMAN">
-        <button class="btn" style="background:#4CAF50;" onclick="gabungMabar()">2. GABUNG MABAR</button>
-        <p id="status" style="font-size:12px; color:gray;">Status: Standby</p>
+        <h1>MODE HOTSPOT</h1>
+        <p>1. Pastikan Adekmu Konek WiFi Kamu</p>
+        <button class="btn" onclick="mulaiMabar()">MULAI (WOI KERJA!)</button>
     </div>
 
+    <div id="game-area" style="display:none;">
+        <h2 style="color:lime;">ARENA TERKUNCI</h2>
+        <p>Pistol & Kartu Siap di Meja</p>
+        </div>
+
     <script>
-        // --- DUNIA 3D (MEJA & PISTOL) ---
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        // Buat Meja Sederhana
-        const mejaGeo = new THREE.CircleGeometry(3, 32);
-        const mejaMat = new THREE.MeshStandardMaterial({ color: 0x1a472a }); // Hijau Kasino
-        const meja = new THREE.Mesh(mejaGeo, mejaMat);
-        meja.rotation.x = -Math.PI / 2;
-        scene.add(meja);
-
-        // Buat Pistol (Kotak Merah)
-        const pistolGeo = new THREE.BoxGeometry(0.5, 0.2, 1);
-        const pistolMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-        const pistol = new THREE.Mesh(pistolGeo, pistolMat);
-        pistol.position.y = 0.5;
-        scene.add(pistol);
-
-        const light = new THREE.PointLight(0xffffff, 1, 100);
-        light.position.set(0, 5, 5);
-        scene.add(light);
-        scene.add(new THREE.AmbientLight(0x404040));
-        camera.position.set(0, 3, 5);
-        camera.lookAt(0,0,0);
-
-        function animate() {
-            requestAnimationFrame(animate);
-            pistol.rotation.y += 0.02; // Pistol muter-muter
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        // --- SISTEM TELEPORTASI SINYAL ---
-        const peer = new Peer();
-        let conn;
-
-        // Saat PeerJS siap, munculkan ID-nya
-        peer.on('open', (id) => {
-            document.getElementById('display-kode').innerText = id;
-        });
-
-        function buatRuangan() {
-            alert("Berikan kode ini ke adekmu: " + peer.id);
-        }
-
-        function gabungMabar() {
-            const code = document.getElementById('room-code').value;
-            conn = peer.connect(code);
-            aksiMasuk();
-        }
-
-        // Ini kunci biar adekmu langsung teleportasi ke meja
-        peer.on('connection', (c) => {
-            conn = c;
-            aksiMasuk();
-        });
-
-        function aksiMasuk() {
-            conn.on('open', () => {
-                // WOI KERJA! Sembunyikan Lobby, Tampilkan Meja
-                document.getElementById('lobby').style.display = 'none';
-                console.log("Teleportasi Berhasil!");
-            });
+        function mulaiMabar() {
+            // Langsung Teleportasi Tanpa Kode!
+            document.getElementById('lobby').style.display = 'none';
+            document.getElementById('game-area').style.display = 'block';
+            alert("Sinyal Hotspot Terdeteksi! Selamat Main.");
         }
     </script>
 </body>
