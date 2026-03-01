@@ -1,16 +1,110 @@
-<div id="lobby" style="position:absolute; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; z-index:10; background:rgba(0,0,0,0.8);">
-    <h1 style="color:red; letter-spacing:5px;">DEAD HAND 3D</h1>
-    
-    <div id="host-section" style="margin-bottom: 30px; text-align:center;">
-        <button onclick="buatRuangan()" style="padding:15px 40px; border-radius:30px; background:#4CAF50; color:white; font-weight:bold; border:none; cursor:pointer;">BUAT RUANGAN (HOST)</button>
-        <p id="display-kode" style="margin-top:10px; color:#8ab4f8; font-family:monospace; font-size:20px;"></p>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DEAD HAND 3D - ARENA 6 ORANG</title>
+    <style>
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
+        #lobby { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; background: rgba(0,0,0,0.9); }
+        .btn { padding: 15px 30px; border-radius: 25px; border: none; font-weight: bold; cursor: pointer; margin: 10px; transition: 0.3s; }
+        .btn-mabar { background: #8ab4f8; color: #000; }
+        .btn-mulai { background: #ff4444; color: #fff; }
+        #status-mandor { color: #ffeb3b; font-size: 14px; margin-top: 20px; }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body>
+
+    <div id="lobby">
+        <h1 style="color:red; letter-spacing:5px;">DEAD HAND 3D</h1>
+        <p id="display-kode">MENUNGGU KODE...</p>
+        
+        <input type="text" id="room-code" placeholder="KODE TEMAN" style="padding:15px; border-radius:20px; text-align:center; border:none;">
+        
+        <div style="display:flex;">
+            <button class="btn btn-mabar" onclick="buatRuangan()">BUAT ROOM</button>
+            <button class="btn btn-mabar" onclick="gabungMabar()">GABUNG</button>
+        </div>
+
+        <button class="btn btn-mulai" id="btn-kerja" onclick="pencetMulai()" style="display:none;">MULAI (WOI KERJA!)</button>
+        
+        <p id="status-mandor">Mandor Python: Standby...</p>
     </div>
 
-    <hr style="width:50%; border:0.5px solid #333;">
+    <script>
+        // --- SETUP DUNIA 3D ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-    <div id="join-section" style="margin-top: 30px; text-align:center;">
-        <input type="text" id="room-code" placeholder="MASUKKAN KODE TEMAN" style="padding:15px; border-radius:20px; text-align:center; border:2px solid #8ab4f8; background:#000; color:white;">
-        <br>
-        <button onclick="gabungMabar()" style="margin-top:15px; padding:10px 30px; border-radius:20px; background:#8ab4f8; border:none; font-weight:bold; cursor:pointer;">GABUNG (JOIN)</button>
-    </div>
-</div>
+        // Pencahayaan
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5, 5, 5).normalize();
+        scene.add(light);
+
+        // Placeholder Pistol (Kotak Merah) - Nanti diganti pistol.glb
+        const geometry = new THREE.BoxGeometry(1, 0.5, 2);
+        const material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        const pistol3D = new THREE.Mesh(geometry, material);
+        scene.add(pistol3D);
+        camera.position.z = 5;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            pistol3D.rotation.y += 0.01;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // --- SINYAL MABAR & MANDOR PYTHON ---
+        const peer = new Peer();
+        let conn;
+
+        // Fungsi Buat Room (Host)
+        function buatRuangan() {
+            peer.on('open', (id) => {
+                document.getElementById('display-kode').innerText = "KODE KAMU: " + id;
+                document.getElementById('status-mandor').innerText = "Mandor: Menunggu 6 Orang...";
+            });
+        }
+
+        // Fungsi Gabung (Joiner)
+        function gabungMabar() {
+            const code = document.getElementById('room-code').value;
+            conn = peer.connect(code);
+            setupKoneksi();
+        }
+
+        peer.on('connection', (c) => {
+            conn = c;
+            setupKoneksi();
+        });
+
+        function setupKoneksi() {
+            conn.on('open', () => {
+                document.getElementById('btn-kerja').style.display = 'block';
+                document.getElementById('status-mandor').innerText = "Mandor: SIAP! WOI KERJA!";
+            });
+        }
+
+        // LOGIKA MANDOR PYTHON (Simulasi Fetch ke .py)
+        function pencetMulai() {
+            // Ini simbol pemanggilan ke server.py nanti
+            console.log("Mengirim sinyal ke server.py...");
+            document.getElementById('lobby').style.display = 'none';
+            alert("GAME DIMULAI! JANGAN MALAS!");
+        }
+
+        // Resize otomatis biar mata gak sakit liat gambar pecah
+        window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+        });
+    </script>
+</body>
+</html>
