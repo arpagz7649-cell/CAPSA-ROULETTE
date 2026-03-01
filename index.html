@@ -4,6 +4,7 @@
     <title>DEAD HAND 3D - CAPSA ROULETTE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body style="margin:0; background:#000; overflow:hidden;">
 
@@ -13,57 +14,6 @@
         <button onclick="mabar()" style="margin-top:20px; padding:10px 30px; border-radius:20px; background:#8ab4f8; font-weight:bold; cursor:pointer;">MASUK ARENA</button>
     </div>
 
-    <script>
-        // --- SEMUA LOGIKA JAVASCRIPT ADA DI SINI ---
-
-        // 1. OTAK 3D (THREE.JS)
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        // Pencahayaan 3D
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(5, 5, 5).normalize();
-        scene.add(light);
-
-        // OBJEK PISTOL 3D (Guna Box Merah sebagai Placeholder)
-        const geometry = new THREE.BoxGeometry(1, 0.5, 2);
-        const material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-        const pistol3D = new THREE.Mesh(geometry, material);
-        scene.add(pistol3D);
-
-        camera.position.z = 5;
-
-        // Animasi Loop JavaScript
-        function render3D() {
-            requestAnimationFrame(render3D);
-            pistol3D.rotation.y += 0.01; // Pistol berpusing 3D
-            renderer.render(scene, camera);
-        }
-        render3D();
-
-        // 2. SINYAL MABAR (PEERJS)
-        const peer = new Peer();
-        let conn;
-
-        function mabar() {
-            const code = document.getElementById('room-code').value;
-            conn = peer.connect(code);
-            conn.on('open', () => {
-                document.getElementById('lobby').style.display = 'none';
-                alert("SINYAL TERKUNCI! MABAR DIMULAI.");
-            });
-        }
-
-        peer.on('connection', (c) => {
-            conn = c;
-            conn.on('open', () => {
-                document.getElementById('lobby').style.display = 'none';
-                alert("TEMAN MASUK! ARENA 3D AKTIF.");
-            });
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
