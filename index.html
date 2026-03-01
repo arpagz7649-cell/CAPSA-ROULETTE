@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>DEAD HAND 3D - FIXED ROOM</title>
+    <title>DEAD HAND 3D - AUTO TELEPORT</title>
     <style>
         body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
-        #lobby { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; background: rgba(0,0,0,0.9); }
-        .box-kode { border: 2px dashed #8ab4f8; padding: 20px; margin: 20px; border-radius: 10px; text-align: center; }
+        #lobby { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; background: #000; }
+        .box-kode { border: 2px solid #8ab4f8; padding: 15px; margin: 15px; border-radius: 10px; }
         .btn { padding: 15px 30px; border-radius: 25px; border: none; font-weight: bold; cursor: pointer; margin: 10px; }
-        .btn-mabar { background: #8ab4f8; color: #000; }
-        input { padding: 15px; border-radius: 20px; text-align: center; border: none; margin: 10px; width: 200px; }
+        input { padding: 15px; border-radius: 20px; text-align: center; border: none; background: #222; color: #fff; }
     </style>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
@@ -18,80 +16,85 @@
 
     <div id="lobby">
         <h1 style="color:red;">DEAD HAND 3D</h1>
-        
         <div class="box-kode">
-            <p style="margin:0; font-size:12px; color:#8ab4f8;">KODE ROOM ANDA:</p>
-            <h2 id="display-kode" style="margin:10px 0;">BELUM ADA KODE</h2>
+            <p style="font-size:12px;">KODE ROOM KAMU:</p>
+            <h2 id="display-kode">MENUNGGU...</h2>
         </div>
-
-        <div style="display:flex; flex-direction:column; align-items:center;">
-            <button class="btn btn-mabar" onclick="buatRuangan()">1. KLIK BUAT ROOM (DAPAT KODE)</button>
-            
-            <hr style="width:100%; border:0.5px solid #333; margin:20px 0;">
-            
-            <input type="text" id="room-code" placeholder="MASUKKAN KODE TEMAN">
-            <button class="btn btn-mabar" style="background:#4CAF50;" onclick="gabungMabar()">2. KLIK GABUNG</button>
-        </div>
-
-        <p id="status-mandor" style="color:yellow; font-size:12px; margin-top:20px;">Status: Standby</p>
+        <button class="btn" style="background:#8ab4f8;" onclick="buatRuangan()">1. BUAT ROOM</button>
+        <hr style="width:50%; border:0.1px solid #333;">
+        <input type="text" id="room-code" placeholder="TEMPEL KODE TEMAN">
+        <button class="btn" style="background:#4CAF50;" onclick="gabungMabar()">2. GABUNG MABAR</button>
+        <p id="status" style="font-size:12px; color:gray;">Status: Standby</p>
     </div>
 
     <script>
-        // --- SETUP 3D (Agar ada gambarnya) ---
+        // --- DUNIA 3D (MEJA & PISTOL) ---
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        const geometry = new THREE.BoxGeometry(1, 0.5, 2);
-        const material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-        const pistol3D = new THREE.Mesh(geometry, material);
-        scene.add(pistol3D);
-        camera.position.z = 5;
+        // Buat Meja Sederhana
+        const mejaGeo = new THREE.CircleGeometry(3, 32);
+        const mejaMat = new THREE.MeshStandardMaterial({ color: 0x1a472a }); // Hijau Kasino
+        const meja = new THREE.Mesh(mejaGeo, mejaMat);
+        meja.rotation.x = -Math.PI / 2;
+        scene.add(meja);
+
+        // Buat Pistol (Kotak Merah)
+        const pistolGeo = new THREE.BoxGeometry(0.5, 0.2, 1);
+        const pistolMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        const pistol = new THREE.Mesh(pistolGeo, pistolMat);
+        pistol.position.y = 0.5;
+        scene.add(pistol);
+
+        const light = new THREE.PointLight(0xffffff, 1, 100);
+        light.position.set(0, 5, 5);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040));
+        camera.position.set(0, 3, 5);
+        camera.lookAt(0,0,0);
 
         function animate() {
             requestAnimationFrame(animate);
-            pistol3D.rotation.y += 0.01;
+            pistol.rotation.y += 0.02; // Pistol muter-muter
             renderer.render(scene, camera);
         }
         animate();
 
-        // --- LOGIKA ROOM & KODE (FIXED) ---
-        const peer = new Peer(); 
+        // --- SISTEM TELEPORTASI SINYAL ---
+        const peer = new Peer();
         let conn;
 
-        // FUNGSI BUAT ROOM (Dapetin Kode Otomatis)
-        function buatRuangan() {
-            // PeerJS otomatis buatin ID unik buat kamu
-            const myId = peer.id; 
-            document.getElementById('display-kode').innerText = myId;
-            document.getElementById('status-mandor').innerText = "Status: Menunggu Teman...";
-            alert("KODE BERHASIL DIBUAT! Kasih kode " + myId + " ke temenmu.");
-        }
-
-        // FUNGSI GABUNG (Masukin Kode Teman)
-        function gabungMabar() {
-            const code = document.getElementById('room-code').value;
-            if(!code) return alert("Isi dulu kodenya, Pilot!");
-            
-            conn = peer.connect(code);
-            setupKoneksi();
-        }
-
-        // Menunggu tamu datang
-        peer.on('connection', (c) => {
-            conn = c;
-            setupKoneksi();
+        // Saat PeerJS siap, munculkan ID-nya
+        peer.on('open', (id) => {
+            document.getElementById('display-kode').innerText = id;
         });
 
-        function setupKoneksi() {
+        function buatRuangan() {
+            alert("Berikan kode ini ke adekmu: " + peer.id);
+        }
+
+        function gabungMabar() {
+            const code = document.getElementById('room-code').value;
+            conn = peer.connect(code);
+            aksiMasuk();
+        }
+
+        // Ini kunci biar adekmu langsung teleportasi ke meja
+        peer.on('connection', (c) => {
+            conn = c;
+            aksiMasuk();
+        });
+
+        function aksiMasuk() {
             conn.on('open', () => {
-                document.getElementById('lobby').style.display = 'none'; // Langsung masuk room
-                alert("SINYAL TERKUNCI! MABAR DIMULAI.");
+                // WOI KERJA! Sembunyikan Lobby, Tampilkan Meja
+                document.getElementById('lobby').style.display = 'none';
+                console.log("Teleportasi Berhasil!");
             });
         }
     </script>
 </body>
 </html>
-
